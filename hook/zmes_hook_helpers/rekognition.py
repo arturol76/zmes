@@ -13,7 +13,6 @@ from imutils.object_detection import non_max_suppression
 # Class to handle HOG based detection
 
 class Rekognition:
-
     def __init__(self):
         #params from config
         self.aws_region = g.config['aws_region']
@@ -26,11 +25,20 @@ class Rekognition:
             aws_access_key_id=self.aws_access_key_id,
             aws_secret_access_key=self.aws_access_key_secret
         )
+
+        self.rekognition_labels= {
+            "Person": "person",
+            "Car": "car"
+        }
                 
         g.logger.debug('Initializing REKOGNITION')
 
     def get_classes(self):
         return ['person']
+
+    #person|car|motorbike|bus|truck
+    def convert_label(self, label):
+        return self.rekognition_labels[label]
 
     def detect(self, image):
 
@@ -53,9 +61,9 @@ class Rekognition:
 
         for label in response['Labels']:
             for instance in label['Instances']:
-                if label['Name'] == 'Person':
+                if label['Name'] in self.rekognition_labels:
                     
-                    labels.append('person')
+                    labels.append(self.convert_label(label['Name']))
                     conf.append(float(label['Confidence'])/100)
 
                     #extracting bounding box coordinates
